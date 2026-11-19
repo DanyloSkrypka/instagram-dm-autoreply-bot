@@ -6,7 +6,7 @@ An auto-responder for Instagram Direct, built for a small clothing store or a sa
 
 ▶️ **Full demo video (about 51 s, 1080p 60 fps):**
 
-https://github.com/user-attachments/assets/7a72ef97-c9db-47d6-b2e7-da7b75a7d1d5
+https://github.com/user-attachments/assets/a75c90cc-a860-4208-abc9-da0d094db5c4
 
 | Comment → DM | FAQ + request → CSV |
 |---|---|
