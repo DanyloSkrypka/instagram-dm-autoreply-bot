@@ -4,13 +4,15 @@ An auto-responder for Instagram Direct, built for a small clothing store or a sa
 
 ![Demo: comment PRICE, get the link in DM](docs/demo.gif)
 
-▶️ **Full demo video (54 s):**
+▶️ **Full demo video (about 51 s, 1080p 60 fps):**
 
 https://github.com/user-attachments/assets/7a72ef97-c9db-47d6-b2e7-da7b75a7d1d5
 
-| Comment → DM | FAQ + request → CSV | Handover to a human |
-|---|---|---|
-| ![](screenshot-1-comment-dm.png) | ![](screenshot-2-faq-lead.png) | ![](screenshot-3-handover.png) |
+| Comment → DM | FAQ + request → CSV |
+|---|---|
+| ![Comment → DM](docs/screenshots/screenshot-1-comment-dm.png) | ![FAQ + request → CSV](docs/screenshots/screenshot-2-faq-lead.png) |
+| **Handover to a human** | **Summary** |
+| ![Handover to a human](docs/screenshots/screenshot-3-handover.png) | ![Summary card](docs/screenshots/04-end-card.png) |
 
 ## What it does
 - **FAQ:** prices (for one product or the whole list), sizes with a size chart, delivery and returns, address and opening hours. It understands free text ("how much is the jeans?", "Wo ist euer Laden?", "А есть в XL?") and quick-reply buttons. One message can get several answers ("price and sizes of the linen shirt").
