@@ -1,4 +1,4 @@
-"""Record the portfolio video (demo.mp4) and 3 screenshots from the local emulator.
+"""Record the portfolio video (demo.mp4, 1080p60) and 4 screenshots (docs/screenshots/) from the local emulator.
 
     .venv/bin/python scripts/record_demo.py
 
@@ -22,23 +22,10 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parent.parent
-W, H = 1440, 900
+W, H = 1920, 1080
+SHOTS = ROOT / "docs" / "screenshots"
+THEME = "light"  # Demo Showcase kit: light or dark
 
-CURSOR_JS = """
-(() => {
-  const c = document.createElement('div');
-  c.id = '__cursor';
-  Object.assign(c.style, {position:'fixed', left:'-40px', top:'-40px', width:'22px', height:'22px', borderRadius:'50%',
-    background:'rgba(255,255,255,.85)', border:'2px solid rgba(0,0,0,.55)', zIndex: 99999, pointerEvents:'none',
-    transform:'translate(-50%,-50%)', transition:'width .12s, height .12s, background .12s',
-    boxShadow:'0 2px 8px rgba(0,0,0,.35)'});
-  const add = () => document.body && !c.isConnected && document.body.appendChild(c);
-  document.addEventListener('DOMContentLoaded', add); add();
-  window.addEventListener('mousemove', e => { c.style.left = e.clientX + 'px'; c.style.top = e.clientY + 'px'; });
-  window.addEventListener('mousedown', () => { c.style.width = c.style.height = '16px'; c.style.background = 'rgba(91,108,255,.9)'; });
-  window.addEventListener('mouseup', () => { c.style.width = c.style.height = '22px'; c.style.background = 'rgba(255,255,255,.85)'; });
-})();
-"""
 
 
 def free_port() -> int:
@@ -64,9 +51,9 @@ def main() -> None:
     frames: list[tuple[float, Path]] = []
     try:
         with sync_playwright() as p:
-            browser = p.chromium.launch(channel="chrome", headless=True)
+            browser = p.chromium.launch(channel="chrome", headless=True,
+                                        args=["--disable-gpu-vsync", "--disable-frame-rate-limit"])
             ctx = browser.new_context(viewport={"width": W, "height": H}, device_scale_factor=1)
-            ctx.add_init_script(CURSOR_JS)
             page = ctx.new_page()
             cdp = ctx.new_cdp_session(page)
 
@@ -80,19 +67,17 @@ def main() -> None:
                     pass
 
             cdp.on("Page.screencastFrame", on_frame)
-            page.goto(url)
+            page.goto(url + "?theme=" + THEME)
             page.wait_for_function("window.demoReady === true")
             page.wait_for_timeout(400)
-            cdp.send("Page.startScreencast", {"format": "jpeg", "quality": 92, "maxWidth": W, "maxHeight": H,
+            cdp.send("Page.startScreencast", {"format": "jpeg", "quality": 95, "maxWidth": W, "maxHeight": H,
                                               "everyNthFrame": 1})
-            page.mouse.move(W / 2, H - 60)
             page.wait_for_timeout(900)
             page.set_default_timeout(10000)
+            SHOTS.mkdir(parents=True, exist_ok=True)
 
             def shot(name):
-                page.evaluate("document.getElementById('__cursor').style.display='none'")
-                page.screenshot(path=str(ROOT / name))
-                page.evaluate("document.getElementById('__cursor').style.display=''")
+                page.screenshot(path=str(SHOTS / name))
 
             def step(n):
                 page.evaluate(f"window.demo.setStep({n})")
@@ -104,18 +89,17 @@ def main() -> None:
                     page.wait_for_timeout(extra)
 
             def click(sel_or_loc, pause=250):
+                """No cursor in the video: soft tap ripple on the element, then a real DOM click."""
                 loc = page.locator(sel_or_loc) if isinstance(sel_or_loc, str) else sel_or_loc
-                box = loc.bounding_box()
-                page.mouse.move(box["x"] + box["width"] / 2, box["y"] + box["height"] / 2, steps=16)
-                page.wait_for_timeout(110)
-                page.mouse.down()
-                page.wait_for_timeout(70)
-                page.mouse.up()
+                loc.evaluate("el => window.demo.tap(el)")
+                page.wait_for_timeout(200)
+                loc.evaluate("el => el.click()")
                 page.wait_for_timeout(pause)
 
             def type_send(input_sel, button_sel, text, extra=900):
-                click(input_sel, 120)
-                page.locator(input_sel).type(text, delay=27)
+                page.locator(input_sel).evaluate("el => el.focus()")
+                page.wait_for_timeout(120)
+                page.locator(input_sel).type(text, delay=40)
                 page.wait_for_timeout(200)
                 click(button_sel, 80)
                 idle(extra)
@@ -124,14 +108,14 @@ def main() -> None:
                 type_send("#cmsg", "#csend", text, extra)
 
             def qr(label, extra=900):
-                click(page.locator("#cqr .qr", has_text=label).first, 80)
+                click(page.locator("#cqr .ds-quick__pill", has_text=label).first, 80)
                 idle(extra)
 
             # 1. comment PRICE -> private reply DM + public reply
             step(1)
             type_send("#cin", "#cpost", "PRICE", 1500)
             shot("screenshot-1-comment-dm.png")
-            click(".tab[data-v=dm]", 1000)
+            click(".ig-tab[data-v=dm]", 1000)
 
             # 2. FAQ in English
             step(2)
@@ -149,7 +133,6 @@ def main() -> None:
             say("Anna", 500)
             say("Wool overshirt, M", 500)
             say("+49 151 2345678", 1800)
-            page.mouse.move(W - 30, H - 30, steps=10)
             shot("screenshot-2-faq-lead.png")
 
             # 5. upset customer -> human
@@ -162,9 +145,12 @@ def main() -> None:
             say("Thank you!", 700)
             click("#resume", 100)
             idle(1600)
-            page.mouse.move(W - 30, H - 30, steps=10)
             shot("screenshot-3-handover.png")
-            page.wait_for_timeout(1800)
+            page.wait_for_timeout(1000)
+            page.evaluate("window.demo.endCard()")
+            page.wait_for_timeout(4000)
+            shot("04-end-card.png")
+            end_ts = time.time()
             cdp.send("Page.stopScreencast")
             page.wait_for_timeout(300)
             ctx.close()
@@ -172,18 +158,33 @@ def main() -> None:
     finally:
         server.terminate()
 
-    # screencast frames arrive only when the page changes -> concat with real durations, resample to 30 fps
-    lst = tmp / "frames.txt"
-    with lst.open("w") as f:
-        for i, (ts, path) in enumerate(frames):
-            dur = (frames[i + 1][0] - ts) if i + 1 < len(frames) else 1.5
-            f.write(f"file '{path}'\nduration {max(dur, 0.001):.4f}\n")
-        f.write(f"file '{frames[-1][1]}'\n")
+    # screencast frames arrive only when the page changes, at irregular times -> resample them
+    # ourselves onto an exact 60 fps grid (latest frame at each tick) and pipe to ffmpeg
     out = ROOT / "demo.mp4"
-    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", str(lst),
-                    "-vf", f"fps=30,scale={W}:{H}:flags=lanczos,format=yuv420p", "-c:v", "libx264",
-                    "-preset", "slow", "-crf", "18", "-movflags", "+faststart", "-an", str(out)], check=True)
-    span = frames[-1][0] - frames[0][0] + 1.5
+    fps = 60
+    proc = subprocess.Popen(["ffmpeg", "-y", "-loglevel", "error", "-f", "image2pipe", "-framerate", str(fps),
+                             "-c:v", "mjpeg", "-i", "-", "-vf", f"scale={W}:{H}:flags=lanczos,format=yuv420p",
+                             "-c:v", "libx264", "-preset", "slow", "-crf", "16", "-r", str(fps),
+                             "-movflags", "+faststart", "-an", str(out)], stdin=subprocess.PIPE)
+    t0, j = frames[0][0], 0
+    for k in range(int((end_ts - t0) * fps) + 1):
+        t = t0 + k / fps
+        while j + 1 < len(frames) and frames[j + 1][0] <= t + 1e-4:
+            j += 1
+        gap = frames[j + 1][0] - frames[j][0] if j + 1 < len(frames) else 0
+        if 1.5 / fps < gap < 4.5 / fps and t - frames[j][0] >= 0.5 / fps:
+            # Chrome dropped frames in the middle of an animation: fill the hole with a weighted
+            # blend of the neighbours instead of holding the old frame (no visible hitch)
+            w = (t - frames[j][0]) / gap
+            proc.stdin.write(subprocess.run(
+                ["ffmpeg", "-v", "error", "-i", str(frames[j][1]), "-i", str(frames[j + 1][1]), "-filter_complex",
+                 f"blend=all_expr='A*{1 - w:.3f}+B*{w:.3f}'", "-q:v", "1", "-f", "mjpeg", "-"], capture_output=True, check=True).stdout)
+            continue
+        proc.stdin.write(frames[j][1].read_bytes())
+    proc.stdin.close()
+    if proc.wait() != 0:
+        raise RuntimeError("ffmpeg failed")
+    span = end_ts - t0
     shutil.rmtree(tmp, ignore_errors=True)
     print(f"saved {out} (~{span:.1f} s, {len(frames)} frames)")
 
