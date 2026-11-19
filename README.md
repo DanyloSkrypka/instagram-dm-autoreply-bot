@@ -4,7 +4,9 @@ An auto-responder for Instagram Direct, built for a small clothing store or a sa
 
 ![Demo: comment PRICE, get the link in DM](docs/demo.gif)
 
-▶️ **Full demo video (54 s):** [demo.mp4](demo.mp4)
+▶️ **Full demo video (54 s):**
+
+https://github.com/user-attachments/assets/7a72ef97-c9db-47d6-b2e7-da7b75a7d1d5
 
 | Comment → DM | FAQ + request → CSV | Handover to a human |
 |---|---|---|
