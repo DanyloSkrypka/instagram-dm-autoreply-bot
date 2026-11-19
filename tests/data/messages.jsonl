@@ -1,0 +1,54 @@
+{"text": "Hi! How much is the wool overshirt?", "lang": "en", "expect": ["price"], "has": "€89"}
+{"text": "price?", "lang": "en", "expect": ["price"], "has": "Our prices"}
+{"text": "how much for the jeans", "lang": "en", "expect": ["price"], "has": "€79"}
+{"text": "Do you have it in XL?", "lang": "en", "expect": ["sizes"]}
+{"text": "what sizes do you have", "lang": "en", "expect": ["sizes"]}
+{"text": "Is the fit true to size?", "lang": "en", "expect": ["sizes"]}
+{"text": "Do you ship to Austria? how long is delivery", "lang": "en", "expect": ["ship"]}
+{"text": "shipping cost?", "lang": "en", "expect": ["ship"]}
+{"text": "can I return it if it doesn't fit", "lang": "en", "expect": ["ship", "sizes"]}
+{"text": "where is your store", "lang": "en", "expect": ["addr"]}
+{"text": "what are your opening hours", "lang": "en", "expect": ["addr"]}
+{"text": "price and sizes of the linen shirt pls", "lang": "en", "expect": ["price", "sizes"], "has": "€59"}
+{"text": "I want to order the merino knit", "lang": "en", "expect": ["lead"]}
+{"text": "can you reserve one for me?", "lang": "en", "expect": ["lead"]}
+{"text": "can I talk to a real person", "lang": "en", "expect": ["human"]}
+{"text": "My order still hasn't arrived after 2 weeks", "lang": "en", "expect": ["unhappy"]}
+{"text": "This is ridiculous, the seam is damaged", "lang": "en", "expect": ["unhappy"]}
+{"text": "I want a refund", "lang": "en", "expect": ["unhappy"]}
+{"text": "worst customer service ever", "lang": "en", "expect": ["unhappy"]}
+{"text": "WHY IS NOBODY ANSWERING MY MESSAGES", "lang": "en", "expect": ["unhappy"]}
+{"text": "not bad at all, love it", "lang": "en", "expect": ["unknown_or_menu"]}
+{"text": "Thanks!!!", "lang": "en", "expect": ["unknown_or_menu"]}
+{"text": "PRICE PLS", "lang": "en", "expect": ["price"]}
+{"text": "hello", "lang": "en", "expect": ["unknown_or_menu"]}
+{"text": "Hallo! Was kostet die Jeans?", "lang": "de", "expect": ["price"], "has": "79 €"}
+{"text": "Wie viel kostet das Overshirt?", "lang": "de", "expect": ["price"], "has": "89 €"}
+{"text": "Welche Größen habt ihr?", "lang": "de", "expect": ["sizes"]}
+{"text": "Wie fällt die Passform aus?", "lang": "de", "expect": ["sizes"]}
+{"text": "Wie lange dauert der Versand nach Österreich?", "lang": "de", "expect": ["ship"]}
+{"text": "Kann ich das zurücksenden?", "lang": "de", "expect": ["ship"]}
+{"text": "Wo ist euer Laden?", "lang": "de", "expect": ["addr"]}
+{"text": "Was sind eure Öffnungszeiten?", "lang": "de", "expect": ["addr"]}
+{"text": "Ich möchte den Pullover bestellen", "lang": "de", "expect": ["lead"]}
+{"text": "Kann ich mit einem Mitarbeiter sprechen?", "lang": "de", "expect": ["human"]}
+{"text": "Meine Bestellung ist immer noch nicht da, echt ärgerlich", "lang": "de", "expect": ["unhappy"]}
+{"text": "Totale Frechheit, die Jacke ist kaputt angekommen", "lang": "de", "expect": ["unhappy"]}
+{"text": "Ich will mein Geld zurück", "lang": "de", "expect": ["unhappy"]}
+{"text": "Sieht nicht schlecht aus!", "lang": "de", "expect": ["unknown_or_menu"]}
+{"text": "Moin", "lang": "de", "expect": ["unknown_or_menu"]}
+{"text": "Привет! Сколько стоят джинсы?", "lang": "ru", "expect": ["price"], "has": "79 €"}
+{"text": "какая цена на свитер", "lang": "ru", "expect": ["price"], "has": "69 €"}
+{"text": "Какие есть размеры?", "lang": "ru", "expect": ["sizes"]}
+{"text": "Сколько идёт доставка в Польшу?", "lang": "ru", "expect": ["ship"]}
+{"text": "Где находится магазин?", "lang": "ru", "expect": ["addr"]}
+{"text": "Какой у вас адрес", "lang": "ru", "expect": ["addr"]}
+{"text": "Хочу заказать рубашку", "lang": "ru", "expect": ["lead"]}
+{"text": "Позовите человека", "lang": "ru", "expect": ["human"]}
+{"text": "Это ужас, заказ до сих пор нет", "lang": "ru", "expect": ["unhappy"]}
+{"text": "Верните деньги, вещь бракованная", "lang": "ru", "expect": ["unhappy"]}
+{"text": "Я недоволен качеством", "lang": "ru", "expect": ["unhappy"]}
+{"text": "Выглядит неплохо, спасибо", "lang": "ru", "expect": ["unknown_or_menu"]}
+{"text": "Здравствуйте", "lang": "ru", "expect": ["unknown_or_menu"]}
+{"text": "Gibt es die Jacke in M?", "lang": "de", "expect": ["sizes"]}
+{"text": "Есть в XL?", "lang": "ru", "expect": ["sizes"]}

@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DM Bot Emulator</title>
+<style>
+  :root {
+    --ink: #e8ecf1; --muted: #8d98a6; --page: #0e1116; --panel: #151a21; --line: #252d38;
+    --accent: #5b6cff; --accent2: #8a5bff; --ok: #2fbf71; --warn: #ff9f43; --bad: #ff5d6c;
+    --ph-bg: #ffffff; --ph-ink: #0f1419; --ph-muted: #737b86; --ph-line: #eceef1; --in: #f0f1f4;
+    --out: linear-gradient(135deg, #5b6cff 0%, #7b5cff 100%);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body { background: radial-gradient(1100px 700px at 25% 15%, #1b2140 0%, var(--page) 62%); color: var(--ink);
+         font-family: -apple-system, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+         display: flex; align-items: center; justify-content: center; gap: 34px; padding: 20px; overflow: hidden; }
+
+  /* ---------- side ---------- */
+  .side { width: 400px; display: flex; flex-direction: column; gap: 14px; }
+  .brand { font-size: 12.5px; letter-spacing: .12em; text-transform: uppercase; color: #9aa6ff; font-weight: 700; }
+  h1 { margin: 0; font-size: 30px; line-height: 1.12; font-weight: 800; letter-spacing: -.02em; }
+  .sub { color: var(--muted); font-size: 14px; line-height: 1.45; margin: 0; }
+  .steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+  .steps li { display: flex; align-items: center; gap: 11px; padding: 7px 11px; border-radius: 11px; color: var(--muted);
+              font-size: 14.5px; transition: all .35s ease; border: 1px solid transparent; }
+  .steps li b { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: 12px;
+                background: #222a36; color: var(--muted); flex: none; transition: all .35s ease; }
+  .steps li.done { color: #cdd5ff; }
+  .steps li.done b { background: #2b3366; color: #c2c9ff; }
+  .steps li.on { color: #fff; background: rgba(91,108,255,.15); border-color: rgba(91,108,255,.5); }
+  .steps li.on b { background: var(--accent); color: #fff; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; }
+  .card h3 { margin: 0 0 7px; font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 700;
+             display: flex; justify-content: space-between; }
+  .card h3 span { color: #9aa6ff; text-transform: none; letter-spacing: 0; font-weight: 600; }
+  #api { font: 11.5px/1.45 ui-monospace, "SF Mono", Menlo, monospace; color: #c9d1dc; white-space: pre-wrap; word-break: break-all;
+         height: 118px; overflow: hidden; }
+  #api .u { color: #8fd3ff; } #api .k { color: #ffcf7a; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { text-align: left; color: var(--muted); font-weight: 600; padding: 3px 4px; border-bottom: 1px solid var(--line); }
+  td { padding: 5px 4px; border-bottom: 1px solid #1d242e; color: #dfe5ec; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
+  tr.new td { animation: flash 1.6s ease-out; }
+  @keyframes flash { from { background: rgba(47,191,113,.35); } to { background: transparent; } }
+  .empty { color: #5d6875; font-size: 12px; padding: 4px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { font-size: 11.5px; padding: 4px 9px; border-radius: 999px; border: 1px solid var(--line); color: #b9c3cf; background: var(--panel); }
+
+  /* ---------- phone ---------- */
+  .wrap { position: relative; padding-top: 28px; }
+  .label { position: absolute; top: 0; left: 0; right: 0; text-align: center; font-size: 12.5px; color: var(--muted);
+           letter-spacing: .08em; text-transform: uppercase; font-weight: 600; }
+  .phone { width: 372px; height: 790px; border-radius: 46px; background: #0a0a0b; padding: 11px; flex: none;
+           box-shadow: 0 30px 80px rgba(0,0,0,.55), inset 0 0 0 2px #2a2a2e; position: relative; }
+  .screen { width: 100%; height: 100%; border-radius: 36px; overflow: hidden; background: var(--ph-bg); color: var(--ph-ink);
+            display: flex; flex-direction: column; position: relative; }
+  .notch { position: absolute; top: 9px; left: 50%; transform: translateX(-50%); width: 104px; height: 28px; background: #0a0a0b;
+           border-radius: 18px; z-index: 5; }
+  .status { height: 40px; flex: none; font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: space-between;
+            padding: 6px 26px 0; }
+  .head { display: flex; align-items: center; gap: 10px; padding: 6px 14px 10px; border-bottom: 1px solid var(--ph-line); flex: none; }
+  .head .back { font-size: 26px; line-height: 1; color: var(--ph-ink); width: 16px; }
+  .ava { width: 36px; height: 36px; border-radius: 50%; flex: none; display: grid; place-items: center; font-weight: 800; font-size: 13px;
+         color: #fff; background: linear-gradient(135deg, #22303f, #48607a); }
+  .ava.cust { background: linear-gradient(135deg, #ff9a7a, #e0607e); }
+  .who { flex: 1; min-width: 0; }
+  .who .nm { font-weight: 700; font-size: 15px; }
+  .who .st { font-size: 12px; color: var(--ph-muted); }
+  .pill { font-size: 11px; font-weight: 700; padding: 4px 9px; border-radius: 999px; background: #e7f8ee; color: #138a4b; transition: all .3s; }
+  .pill.human { background: #fff1e3; color: #c1650c; }
+
+  .tabs { display: flex; border-bottom: 1px solid var(--ph-line); flex: none; }
+  .tab { flex: 1; text-align: center; padding: 9px 0; font-size: 13.5px; font-weight: 600; color: var(--ph-muted); cursor: pointer; position: relative; }
+  .tab.on { color: var(--ph-ink); box-shadow: inset 0 -2px 0 var(--ph-ink); }
+  .tab .dot { display: none; position: absolute; top: 6px; margin-left: 4px; min-width: 17px; height: 17px; border-radius: 9px; background: var(--bad);
+              color: #fff; font-size: 11px; line-height: 17px; padding: 0 5px; }
+  .tab .dot.show { display: inline-block; }
+  .view { flex: 1; display: none; flex-direction: column; min-height: 0; }
+  .view.on { display: flex; }
+
+  /* post view */
+  .post-scroll { flex: 1; overflow-y: auto; }
+  .post-scroll::-webkit-scrollbar, .chat::-webkit-scrollbar { width: 0; }
+  .ph-user { display: flex; align-items: center; gap: 9px; padding: 9px 12px; font-size: 13.5px; font-weight: 700; }
+  .ph-user .ava { width: 30px; height: 30px; font-size: 11px; }
+  .photo { height: 300px; position: relative; overflow: hidden;
+           background: radial-gradient(120% 90% at 30% 20%, #e9e1d4 0%, #cdbfa8 55%, #a8977c 100%); }
+  .shirt { position: absolute; left: 50%; top: 52%; transform: translate(-50%, -50%); width: 190px; height: 210px; }
+  .photo .tag { position: absolute; left: 14px; bottom: 14px; background: rgba(15,20,25,.82); color: #fff; font-size: 12.5px;
+                padding: 6px 10px; border-radius: 8px; font-weight: 600; }
+  .actions { display: flex; gap: 16px; padding: 10px 12px 4px; font-size: 20px; }
+  .actions svg { width: 23px; height: 23px; stroke: var(--ph-ink); fill: none; stroke-width: 1.8; }
+  .caption { padding: 2px 12px 8px; font-size: 13.5px; line-height: 1.4; }
+  .caption b { font-weight: 700; }
+  .comments { padding: 0 12px 10px; display: flex; flex-direction: column; gap: 9px; }
+  .cm { font-size: 13.5px; line-height: 1.35; animation: pop .22s ease-out; }
+  .cm b { font-weight: 700; margin-right: 5px; }
+  .cm.reply { margin-left: 26px; color: #2d3440; }
+  .cm .ago { color: var(--ph-muted); font-size: 11.5px; display: block; margin-top: 2px; }
+  .cbar { display: flex; align-items: center; gap: 9px; padding: 8px 12px 22px; border-top: 1px solid var(--ph-line); flex: none; }
+  .cbar input { flex: 1; border: 1px solid var(--ph-line); border-radius: 22px; padding: 10px 14px; font-size: 14px; outline: none; font-family: inherit; }
+  .cbar .post-btn { color: var(--accent); font-weight: 700; font-size: 14px; cursor: pointer; border: 0; background: none; font-family: inherit; }
+
+  /* chat */
+  .chat { flex: 1; overflow-y: auto; padding: 12px 12px 6px; display: flex; flex-direction: column; gap: 3px; scroll-behavior: smooth; }
+  .sys { align-self: center; font-size: 11.5px; color: var(--ph-muted); margin: 6px 0; text-align: center; max-width: 90%; }
+  .sys.alert { background: #fff1e3; color: #9a4f08; padding: 7px 10px; border-radius: 10px; font-weight: 600; }
+  .sys.okk { background: #e7f8ee; color: #137a43; padding: 6px 10px; border-radius: 10px; font-weight: 600; }
+  .row { display: flex; flex-direction: column; animation: pop .22s ease-out; }
+  .row.out { align-items: flex-end; }
+  .row.in { align-items: flex-start; }
+  @keyframes pop { from { transform: translateY(6px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .who-tag { font-size: 10.5px; color: var(--ph-muted); margin: 6px 6px 2px; font-weight: 600; }
+  .who-tag.h { color: #c1650c; }
+  .bubble { max-width: 80%; padding: 8px 12px; border-radius: 20px; font-size: 14px; line-height: 1.38; white-space: pre-wrap;
+            word-wrap: break-word; background: var(--in); }
+  .bubble a { color: inherit; text-decoration: underline; word-break: break-all; }
+  .row.out .bubble { background: var(--out); color: #fff; }
+  .row.out.plain .bubble { background: #2b2f36; }
+  .bubble.human { background: #fff1e3; }
+  .via { font-size: 10px; color: var(--ph-muted); margin: 2px 8px 0; }
+  .typing { display: inline-flex; gap: 4px; padding: 3px 0; }
+  .typing i { width: 7px; height: 7px; border-radius: 50%; background: #a3aab3; animation: blink 1s infinite; }
+  .typing i:nth-child(2) { animation-delay: .15s; } .typing i:nth-child(3) { animation-delay: .3s; }
+  @keyframes blink { 0%,80%,100% { opacity: .3; } 40% { opacity: 1; } }
+  .qrs { display: flex; gap: 7px; overflow-x: auto; padding: 8px 12px 2px; flex: none; min-height: 0; }
+  .qrs::-webkit-scrollbar { height: 0; }
+  .qr { flex: none; border: 1px solid #d9dde3; background: #fff; border-radius: 18px; padding: 7px 12px; font-size: 13px; font-weight: 600;
+        color: var(--ph-ink); cursor: pointer; font-family: inherit; }
+  .qr:hover { background: #f4f5f7; }
+  .bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px 22px; flex: none; }
+  .bar .in { flex: 1; display: flex; align-items: center; border: 1px solid var(--ph-line); background: #f6f7f9; border-radius: 24px; padding: 0 6px 0 14px; height: 44px; }
+  .bar input { flex: 1; border: 0; outline: 0; background: transparent; font-size: 14.5px; font-family: inherit; color: var(--ph-ink); }
+  .send { border: 0; background: var(--accent); color: #fff; font-weight: 700; font-size: 13px; padding: 8px 13px; border-radius: 18px; cursor: pointer; font-family: inherit; }
+  .owner-tools { display: flex; gap: 8px; padding: 6px 12px 0; flex: none; }
+  .resume { flex: 1; border: 1px solid #cfe9db; background: #effaf4; color: #137a43; font-weight: 700; font-size: 13px; padding: 8px; border-radius: 12px;
+            cursor: pointer; font-family: inherit; }
+  .resume:disabled { opacity: .45; cursor: default; }
+  @media (max-width: 1300px) { .side { display: none; } }
+</style>
+</head>
+<body>
+  <aside class="side">
+    <div class="brand">Portfolio demo · Instagram DM bot</div>
+    <h1>Instagram DM assistant for a small shop</h1>
+    <p class="sub">FAQ in EN · DE · RU, comment “PRICE” → DM with the link, handover to a human when a customer is upset, requests saved to CSV. Official Graph API only.</p>
+    <ol class="steps" id="steps">
+      <li data-s="1"><b>1</b>Comment “PRICE” → private reply DM</li>
+      <li data-s="2"><b>2</b>FAQ: sizes, delivery (AI disclosed)</li>
+      <li data-s="3"><b>3</b>Switches language: DE / RU</li>
+      <li data-s="4"><b>4</b>Order request → leads.csv</li>
+      <li data-s="5"><b>5</b>Upset customer → human takes over</li>
+      <li data-s="6"><b>6</b>Owner answers, bot resumes</li>
+    </ol>
+    <div class="card"><h3>Graph API call <span id="apin">—</span></h3><div id="api">waiting for the first message…</div></div>
+    <div class="card"><h3>data/leads.csv <span id="leadn">0 rows</span></h3>
+      <table><thead><tr><th>#</th><th>name</th><th>item</th><th>contact</th><th>@user</th></tr></thead><tbody id="leads"></tbody></table>
+      <div class="empty" id="noleads">no requests yet</div>
+    </div>
+    <div class="chips">
+      <span class="chip">FastAPI webhooks</span><span class="chip">X-Hub-Signature-256</span><span class="chip">SQLite</span>
+      <span class="chip">24 h window</span><span class="chip">pytest · Graph API mocked</span>
+    </div>
+  </aside>
+
+  <div class="wrap"><div class="label">Customer</div>
+    <div class="phone"><div class="screen" id="cust">
+      <div class="notch"></div>
+      <div class="status"><span>10:00</span><span>●●● 5G ▮</span></div>
+      <div class="tabs"><div class="tab on" data-v="post">Post</div><div class="tab" data-v="dm">Messages<span class="dot" id="dmdot">1</span></div></div>
+      <div class="view on" id="v-post">
+        <div class="post-scroll" id="postscroll">
+          <div class="ph-user"><div class="ava">AN</div>atelier.nord</div>
+          <div class="photo">
+            <svg class="shirt" viewBox="0 0 190 210" aria-hidden="true">
+              <path d="M62 8 L95 22 L128 8 L176 34 L160 82 L140 74 L140 202 L50 202 L50 74 L30 82 L14 34 Z" fill="#3f4a3c"/>
+              <path d="M62 8 L95 22 L128 8 L118 30 L95 40 L72 30 Z" fill="#323b30"/>
+              <path d="M95 40 L95 202" stroke="#2a3128" stroke-width="2"/>
+              <g fill="#cfc6b4"><circle cx="95" cy="70" r="3"/><circle cx="95" cy="104" r="3"/><circle cx="95" cy="138" r="3"/><circle cx="95" cy="172" r="3"/></g>
+              <rect x="58" y="88" width="26" height="22" rx="3" fill="none" stroke="#2a3128" stroke-width="2"/>
+              <rect x="106" y="88" width="26" height="22" rx="3" fill="none" stroke="#2a3128" stroke-width="2"/>
+            </svg>
+            <div class="tag">Wool overshirt · new</div>
+          </div>
+          <div class="actions">
+            <svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-3.2-6.4L21 4l-1.2 4.4A8 8 0 0 1 20 12z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M21 3 3 10l7 3 3 7z"/></svg>
+          </div>
+          <div class="caption"><b>atelier.nord</b>The wool overshirt is back in olive 🌿 Comment <b>PRICE</b> and we'll DM you the link.</div>
+          <div class="comments" id="comments">
+            <div class="cm"><b>jonas.berlin</b>fire 🔥<span class="ago">2h</span></div>
+          </div>
+        </div>
+        <div class="cbar"><input id="cin" placeholder="Add a comment…"><button class="post-btn" id="cpost">Post</button></div>
+      </div>
+      <div class="view" id="v-dm">
+        <div class="head"><span class="back">‹</span><div class="ava">AN</div>
+          <div class="who"><div class="nm">atelier.nord</div><div class="st" id="cst">Business chat</div></div></div>
+        <div class="chat" id="cchat"></div>
+        <div class="qrs" id="cqr"></div>
+        <div class="bar"><div class="in"><input id="cmsg" placeholder="Message…"><button class="send" id="csend">Send</button></div></div>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="wrap"><div class="label">Shop owner · inbox</div>
+    <div class="phone"><div class="screen" id="own">
+      <div class="notch"></div>
+      <div class="status"><span>10:00</span><span>●●● 5G ▮</span></div>
+      <div class="head"><span class="back">‹</span><div class="ava cust">AK</div>
+        <div class="who"><div class="nm">anna.k</div><div class="st">Customer · from comment</div></div>
+        <span class="pill" id="mode">AI on</span></div>
+      <div class="chat" id="ochat"><div class="sys">The bot answers automatically. You get an alert when a customer needs a person.</div></div>
+      <div class="owner-tools"><button class="resume" id="resume" disabled>↺ Hand back to AI assistant</button></div>
+      <div class="bar"><div class="in"><input id="omsg" placeholder="Reply as Lena…"><button class="send" id="osend">Send</button></div></div>
+    </div></div>
+  </div>
+
+<script>
+const USER = "ig_cust_anna", USERNAME = "anna.k";
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const $ = id => document.getElementById(id);
+let cursor = 0, busy = 0, lastHandovers = 0, lastLeads = 0, lastMode = "bot", lastComment = null;
+
+function esc(s) { return s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+function linkify(s) { return esc(s).replace(/(https?:\/\/[^\s]+)/g, '<a href="#" onclick="return false">$1</a>'); }
+function scroll(el) { el.scrollTop = el.scrollHeight; }
+
+function bubble(chatEl, side, text, opts = {}) {
+  const r = document.createElement("div");
+  r.className = "row " + side + (opts.plain ? " plain" : "");
+  if (opts.tag) { const t = document.createElement("div"); t.className = "who-tag" + (opts.human ? " h" : ""); t.textContent = opts.tag; r.appendChild(t); }
+  const b = document.createElement("div");
+  b.className = "bubble" + (opts.human ? " human" : "");
+  b.innerHTML = linkify(text);
+  r.appendChild(b);
+  if (opts.via) { const v = document.createElement("div"); v.className = "via"; v.textContent = opts.via; r.appendChild(v); }
+  chatEl.appendChild(r); scroll(chatEl);
+  return r;
+}
+function sys(chatEl, text, cls = "") { const d = document.createElement("div"); d.className = "sys " + cls; d.textContent = text; chatEl.appendChild(d); scroll(chatEl); }
+
+function setQR(list) {
+  const box = $("cqr"); box.innerHTML = "";
+  for (const q of list || []) {
+    const b = document.createElement("button"); b.className = "qr"; b.textContent = q.title;
+    b.onclick = () => customerSend(q.title, q.payload);
+    box.appendChild(b);
+  }
+  scroll($("cchat"));
+}
+
+let typingEl = null;
+function typing(on) {
+  if (on && !typingEl) {
+    typingEl = document.createElement("div"); typingEl.className = "row in";
+    typingEl.innerHTML = '<div class="bubble"><span class="typing"><i></i><i></i><i></i></span></div>';
+    $("cchat").appendChild(typingEl); scroll($("cchat")); $("cst").textContent = "typing…";
+  } else if (!on && typingEl) { typingEl.remove(); typingEl = null; $("cst").textContent = "Business chat"; }
+}
+
+function showApi(ev) {
+  const body = JSON.stringify(ev.request.body, null, 1).replace(/\n\s*/g, " ");
+  const short = body.length > 300 ? body.slice(0, 297) + "…" : body;
+  $("api").innerHTML = `<span class="u">${esc(ev.request.url.replace("https://", "").replace(/\/demo_ig_account\//, "/{ig-id}/"))}</span>\n` +
+    esc(short).replace(/&quot;(recipient|comment_id|quick_replies|message|text|id)&quot;/g, '<span class="k">"$1"</span>');
+  $("apin").textContent = ev.via === "private_reply" ? "private reply" : "Send API";
+}
+
+async function api(path, body) {
+  const r = await fetch(path, { method: body ? "POST" : "GET", headers: { "content-type": "application/json" }, body: body ? JSON.stringify(body) : undefined });
+  return r.json();
+}
+
+async function poll(withTyping) {
+  const t0 = performance.now();
+  const d = await api("/api/emu/poll?since=" + cursor);
+  cursor = d.next;
+  const dms = d.events.filter(e => e.kind === "dm" && e.user === USER);
+  if (withTyping && dms.some(e => e.via !== "human")) { const w = 650 - (performance.now() - t0); if (w > 0) await sleep(w); }
+  typing(false);
+  for (const ev of d.events) {
+    if (ev.kind === "comment_reply") {
+      await sleep(250);
+      const c = document.createElement("div"); c.className = "cm reply"; c.innerHTML = `<b>atelier.nord</b>${esc(ev.text)}<span class="ago">now · Reply</span>`;
+      (lastComment ? lastComment.after(c) : $("comments").appendChild(c)); $("postscroll").scrollTop = 1e6;
+      continue;
+    }
+    if (ev.user !== USER) continue;
+    const m = ev.request.body.message;
+    if (ev.via === "human") {
+      bubble($("cchat"), "in", m.text, { human: true, tag: "Lena · Atelier Nord team" });
+      bubble($("ochat"), "out", m.text, { plain: true });
+      setQR([]);
+    } else {
+      showApi(ev);
+      bubble($("cchat"), "in", m.text, { via: ev.via === "private_reply" ? "Replied to your comment" : "" });
+      bubble($("ochat"), "out", m.text, { tag: "AI assistant", via: ev.via === "private_reply" ? "private reply to comment" : "" });
+      setQR(m.quick_replies);
+      if (ev.via === "private_reply" && !$("v-dm").classList.contains("on")) $("dmdot").classList.add("show");
+    }
+    await sleep(330);
+  }
+  // owner side: alerts and mode
+  if (d.handovers.length > lastHandovers) {
+    for (const h of d.handovers.slice(lastHandovers))
+      sys($("ochat"), `⚠ Needs a person (${h.reason === "unhappy" ? "customer is upset" : "asked for a human"}) — AI paused`, "alert");
+    lastHandovers = d.handovers.length;
+  }
+  const mode = d.modes[USER] || "bot";
+  if (mode !== lastMode) {
+    if (mode === "bot") sys($("ochat"), "AI assistant is back on", "okk");
+    lastMode = mode;
+  }
+  $("mode").textContent = mode === "human" ? "You're handling" : "AI on";
+  $("mode").classList.toggle("human", mode === "human");
+  $("resume").disabled = mode !== "human";
+  renderLeads(d.leads);
+}
+
+function renderLeads(leads) {
+  $("leadn").textContent = leads.length + (leads.length === 1 ? " row" : " rows");
+  $("noleads").style.display = leads.length ? "none" : "";
+  if (leads.length === lastLeads) return;
+  const tb = $("leads"); tb.innerHTML = "";
+  leads.forEach((l, i) => {
+    const tr = document.createElement("tr"); if (i >= lastLeads) tr.className = "new";
+    for (const v of [l.id, l.name, l.item, l.contact || "—", l.username ? "@" + l.username : "—"]) {
+      const td = document.createElement("td"); td.textContent = v; td.title = v; tr.appendChild(td);
+    }
+    tb.appendChild(tr);
+  });
+  lastLeads = leads.length;
+}
+
+async function run(fn) { busy++; try { await fn(); } finally { busy--; } }
+
+function customerSend(text, payload) {
+  text = (text ?? $("cmsg").value).trim();
+  if (!text) return;
+  $("cmsg").value = ""; setQR([]);
+  bubble($("cchat"), "out", text);
+  bubble($("ochat"), "in", text);
+  return run(async () => { typing(true); await api("/api/emu/dm", { user: USER, text, payload }); await poll(true); });
+}
+function comment() {
+  const text = $("cin").value.trim(); if (!text) return;
+  $("cin").value = "";
+  const c = document.createElement("div"); c.className = "cm"; c.innerHTML = `<b>${USERNAME}</b>${esc(text)}<span class="ago">now</span>`;
+  $("comments").appendChild(c); lastComment = c; $("postscroll").scrollTop = 1e6;
+  sys($("ochat"), `New comment from @${USERNAME}: “${text}”`);
+  return run(async () => { await sleep(500); await api("/api/emu/comment", { user: USER, username: USERNAME, text, media_id: "17900000000000001" }); await poll(false); });
+}
+function ownerSend() {
+  const text = $("omsg").value.trim(); if (!text) return;
+  $("omsg").value = "";
+  return run(async () => { await api("/api/emu/owner_reply", { user: USER, text }); await poll(false); });
+}
+
+function showView(v) {
+  document.querySelectorAll("#cust .tab").forEach(t => t.classList.toggle("on", t.dataset.v === v));
+  $("v-post").classList.toggle("on", v === "post"); $("v-dm").classList.toggle("on", v === "dm");
+  if (v === "dm") { $("dmdot").classList.remove("show"); scroll($("cchat")); }
+}
+document.querySelectorAll("#cust .tab").forEach(t => t.onclick = () => showView(t.dataset.v));
+$("csend").onclick = () => customerSend();
+$("cmsg").addEventListener("keydown", e => { if (e.key === "Enter") customerSend(); });
+$("cpost").onclick = comment;
+$("cin").addEventListener("keydown", e => { if (e.key === "Enter") comment(); });
+$("osend").onclick = ownerSend;
+$("omsg").addEventListener("keydown", e => { if (e.key === "Enter") ownerSend(); });
+$("resume").onclick = () => run(async () => { await api("/api/emu/resume", { user: USER }); await poll(false); });
+
+function setStep(n) {
+  document.querySelectorAll("#steps li").forEach(li => { const s = +li.dataset.s; li.classList.toggle("on", s === n); li.classList.toggle("done", s < n); });
+}
+async function idle() { await sleep(80); while (busy) await sleep(60); }
+
+window.demoReady = false;
+api("/api/emu/reset", {}).then(() => poll(false)).then(() => { window.demoReady = true; });
+window.demo = { setStep, idle, showView };
+</script>
+</body>
+</html>

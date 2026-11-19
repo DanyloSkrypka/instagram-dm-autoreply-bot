@@ -1,0 +1,28 @@
+{
+  "name": "Atelier Nord",
+  "owner_name": "Lena",
+  "reply_time": {"en": "within 1 hour (Mon–Sat)", "de": "innerhalb 1 Stunde (Mo–Sa)", "ru": "в течение часа (пн–сб)"},
+  "catalog_url": "https://atelier-nord.example/shop",
+  "products": [
+    {"id": "overshirt", "name": "Wool overshirt", "price": 89, "url": "https://atelier-nord.example/p/wool-overshirt",
+     "keywords": ["overshirt", "wool", "hemdjacke", "wolle", "рубашка", "шерст"]},
+    {"id": "linen", "name": "Linen shirt", "price": 59, "url": "https://atelier-nord.example/p/linen-shirt",
+     "keywords": ["linen", "leinen", "лён", "льнян"]},
+    {"id": "jeans", "name": "Straight jeans", "price": 79, "url": "https://atelier-nord.example/p/straight-jeans",
+     "keywords": ["jeans", "denim", "джинс"]},
+    {"id": "knit", "name": "Merino knit", "price": 69, "url": "https://atelier-nord.example/p/merino-knit",
+     "keywords": ["knit", "sweater", "jumper", "merino", "pullover", "strick", "свитер", "джемпер"]}
+  ],
+  "media": {
+    "17900000000000001": "overshirt"
+  },
+  "sizes": "XS · S · M · L · XL · XXL",
+  "size_chart": {"S": "chest 96 cm", "M": "chest 102 cm", "L": "chest 108 cm", "XL": "chest 114 cm"},
+  "shipping": {
+    "de_days": "2–3", "de_price": 4.9, "free_from": 100,
+    "eu_days": "4–7", "eu_price": 9.9, "returns_days": 30
+  },
+  "address": "Musterstraße 12, 10115 Berlin",
+  "hours": {"en": "Mon–Fri 11:00–19:00, Sat 11:00–16:00", "de": "Mo–Fr 11–19 Uhr, Sa 11–16 Uhr", "ru": "пн–пт 11:00–19:00, сб 11:00–16:00"},
+  "maps_url": "https://maps.example/atelier-nord"
+}
